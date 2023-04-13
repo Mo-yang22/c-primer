@@ -8,50 +8,61 @@ public:
         bookNo(book),price(sales_price){}
     string isbn() const { return bookNo; }
     virtual double net_price( size_t n) const
-        {return n * price;}
+        {cout<<1<<endl;return n * price;}
     virtual ~Quote() = default;
+    void virtual debug()const{
+        cout<<"bookNo: "<<bookNo<<endl;
+        cout<<"price: "<<price<<endl;
+    } 
 private:
     string bookNo;
 protected:
     double price = 0.0;
 };
-class Bulk_quote : public Quote
+class Disc_quote : public Quote
+{
+public:
+    Disc_quote()=default;
+    Disc_quote(const string&,double, size_t, double);
+    double net_price(size_t) const =0;
+protected:
+    size_t quantity = 0;
+    double discount = 0.0;
+};
+Disc_quote::Disc_quote(const string &s,double price,size_t qty, double disc)
+:Quote(s,price),quantity(qty),discount(disc){};
+class Bulk_quote :public Disc_quote
 {
 public:
     Bulk_quote()=default;
     Bulk_quote(const string&,double, size_t, double);
     double net_price(size_t) const override;
-private:
-    size_t min_qty = 0;
-    double discount = 0.0;
 };
-Bulk_quote::Bulk_quote(const string& s, double price, size_t qty, double disc):
-Quote(s,price),min_qty(qty),discount(disc){}
+Bulk_quote::Bulk_quote(const string &s , double price, size_t qty, double disc)
+:Disc_quote(s,price,qty,disc){};
 double Bulk_quote::net_price(size_t num) const
 {
-    if(num>=min_qty)
+    cout<<2<<endl;
+    if(num>=quantity)
         return num*(1-discount) * price;
     else
         return num*price;
 }
-class Good_quote: public Quote
+class Good_quote: public Disc_quote
 {
 public:
     Good_quote()=default;
-    Good_quote(const string &, double, size_t, double);
+    Good_quote(const string &,double, size_t, double);
     double net_price(size_t) const override;
-private:
-    size_t max_qty = 0;
-    double discount = 0.0;
 };
-Good_quote::Good_quote(const string & s, double price, size_t qty, double disc)
-:Quote(s,price),max_qty(qty),discount(disc){}
-double Good_quote::net_price(size_t cnt) const 
+Good_quote::Good_quote(const string &s , double price, size_t qty, double disc)
+:Disc_quote(s,price,qty,disc){};
+double Good_quote::net_price(size_t cnt) const
 {
-    if(cnt<=max_qty)
+    if(cnt<=quantity)
         return cnt * (1-discount) * price;
     else
-        return (max_qty *(1-discount) *price) + ((cnt-max_qty) * price);
+        return (quantity *(1-discount) *price) + ((cnt-quantity) * price);
 }
 double print_total(ostream &os,const Quote &item, size_t n)
 {
@@ -67,5 +78,6 @@ int main()
     print_total(cout,q,11);
     print_total(cout,bq,11);
     print_total(cout,gq,11);
+
     return 0;
 }
