@@ -14,6 +14,9 @@ public:
         cout<<"bookNo: "<<bookNo<<endl;
         cout<<"price: "<<price<<endl;
     } 
+    void virtual test(){
+        cout<<"this is quote"<<endl;
+    }
 private:
     string bookNo;
 protected:
@@ -29,6 +32,7 @@ public:
         cout<<"min_qty: "<<min_qty<<endl;
         cout<<"discount" <<discount<<endl;
     }
+    void test(){cout<<"min_qty"<<endl;}
 private:
     size_t min_qty = 0;
     double discount = 0.0;
@@ -83,5 +87,9 @@ int main()
     q.debug();
     bq.debug();
     gq.debug();
+    cout<<".............................."<<endl;
+    Quote &q1=bq;
+    q1.debug();
+    q1.test();
     return 0;
 }
