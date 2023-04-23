@@ -24,6 +24,21 @@ template<typename Type>
 class RBTree
 {
 public:
+    //构造函数
+    RBTree()
+    {
+        Nil = BuyNode();
+        root = Nil;
+        Nil->color = BLACK;
+    }
+    //析构函数
+    ~RBTree()
+    {
+        destroy(root); //销毁创建的非Nil结点
+        delete Nil;    //最后删除Nil结点
+        Nil = NULL;
+    }
+    void InOrder(){InOrder(root);}
     //插入
     //1.BST方式插入
     //2.调整平衡
@@ -37,7 +52,7 @@ public:
             {
                 return false;
             }
-            pr = s//每次记住s的父节点
+            pr = s;//每次记住s的父节点
             if(value>s->key)
             {
                 s = s->right;
@@ -68,6 +83,19 @@ public:
         Insert_Fixup(s);
         return true;
     }
+    //删除key节点(先查找,再调用内部删除)
+    void Remove(Type key)
+    {
+        RBTNode<Type> *t;
+        if((t = Search(root,key)) != Nil)
+        {
+            Remove(t);
+        }
+        else{
+            cout<< "key is not exist."<<endl;
+        }
+    }
+    void InOrderPrint(){ InOrderPrint(root); }
 protected:
     //申请结点，将结点的颜色初始化为红色，初始化结点的关键字，其他初始化为空，各指针在上层调用
     RBTNode<Type> *BuyNode(const Type &x=Type())
@@ -205,7 +233,7 @@ protected:
                 {
                     s->parent->color = BLACK;
                     uncle->color = BLACK;
-                    s->parent->parent = RED;
+                    s->parent->parent->color = RED;
                     s=s->parent->parent;
                 }
                 else
@@ -245,8 +273,188 @@ protected:
             return Search(root->right,key);
         }
     }
-    
+    // void Transplant(RBTNode<Type> *u,RBTNode<Type> *v)
+    // {
+    //     if(u->parent == Nil)
+    //     {
+    //         root = v;
+    //     }
+    //     else if(u==u->parent->left)
+    //     {
+    //         u->parent->left = v;
+    //     }
+    //     else{
+    //         u->parent->right = v;
+    //     }
+    //     v->parent = u->parent;
+    // }
+    /* 找到最左结点(最小)
+     *      xp
+     *        \
+     *         x
+     *        / \
+     *      xl   xr
+     *     / \
+     *   xll  xlr
+     */
+    RBTNode<Type> *Minimum(RBTNode<Type> *x)
+    {
+        if(x->left == Nil)
+        {
+            return x;
+        }
+        return Minimum(x->left);
+    }
+    //删除节点z
+    void Remove(RBTNode<Type> *z)
+    {
+        RBTNode<Type> *y = Nil;
+        if(z->left == Nil || z->right == Nil)
+        {
+            y = z;
+        }
+        else{
+            y = Minimum(z->right);
+            std::swap(y->key,z->key);
+        }
+        RBTNode<Type> *yp = y->parent;
+        //?
+        RBTNode<Type> *ychild = y->left != Nil?y->left:y->right;
+        ychild->parent=yp;
+        if(yp == Nil){
+            root = ychild;
+        }
+        else if(yp->left==y){
+            yp->left=ychild;
+        }
+        else{
+            yp->right=ychild;
+        }
+        if(y->color == BLACK)
+            Remove_Fixup(ychild); 
+    }  
+    //红黑树删除调整
+    void Remove_Fixup(RBTNode<Type> *x)
+    {
+        while(x != root && x->color ==BLACK)
+        {
+            if(x == x->parent->left)
+            {
+                RBTNode<Type> *w = x->parent->right;
+
+                if(w->color == RED)//红兄的情况,先行进行处理,可以转化为其他情况
+                {
+                    w->color == BLACK;
+                    x->parent->color == RED;
+                    LeftRotate(x->parent);
+                    w= x->parent->right;
+                }
+                //笔记是不是少了一种情况,黑父黑兄黑侄
+                if(w->left->color == BLACK && w->right->color ==BLACK)
+                {
+                    w->color = RED;
+                    x= x->parent;
+                }
+                else//黑兄红父
+                {
+                    //一种情况,转换为第二种
+                    if(w->right->color == BLACK)
+                    {
+                        w->color =RED;
+                        w->left->color = BLACK;
+                        RightRotate(w);
+                        w = x->parent->right;
+                    }
+                    w->color = w->parent->color;
+                    w->parent->color = BLACK;
+                    w->right->color =BLACK;
+                    LeftRotate(x->parent);
+                    x = root;//结束循环
+                }
+            }
+            else//x在右子树
+            {
+                RBTNode<Type> *w=x->parent->left;
+                if(w->color == RED)
+                {
+                    w->parent->color = RED;
+                    w->color = BLACK;
+                    RightRotate(x->parent);
+                    w = x->parent->left;
+                }
+                if(w->right->color == BLACK && w->right->color == BLACK)
+                {
+                    w->color = RED;
+                    x = x->parent;
+                }
+                else
+                {
+                    if(w->left->color == BLACK)
+                    {
+                        w->right->color = BLACK;
+                        w->color = RED;
+                        LeftRotate(w);
+                        w= x->parent->left;
+                    }
+                    w->color = x->parent->color;
+                    x->parent->color =BLACK;
+                    w->left->color =BLACK;
+                    RightRotate(x->parent);
+                    x = root; 
+                }
+            }
+        }
+        x->color = BLACK;
+    }
+    //销毁红黑树
+    void destroy(RBTNode<Type> *root)
+    {
+        if(root == Nil)
+        {
+            return; 
+        }
+        destroy(root->left);
+        destroy(root->right);
+        delete root;
+        root = NULL;
+    }
+
+    //中序遍历打印结点详细的颜色信息
+    void InOrderPrint(RBTNode<Type> *node)
+    {
+        if(node == Nil)
+        {
+            return;
+        }
+        InOrderPrint(node->left);
+        cout << node->key << "(" << ((node->color == BLACK) ? "BLACK" : "RED") << ")"
+             << " ";
+        InOrderPrint(node->right);
+    }
 private:
     RBTNode<Type> *root;//根指针
     RBTNode<Type> *Nil;//外部结点，表示为空结点，黑色
 };
+int main(int argc, char *argv[])
+{
+    RBTree<int> rb;
+
+    int arr[] = {10, 7, 8, 15, 5, 6, 11, 13, 12};
+    int n = sizeof(arr) / sizeof(int);
+    for (int i = 0; i < n; i++)
+    {
+        rb.Insert(arr[i]);
+    }
+
+    rb.InOrder();
+    cout << endl;
+    rb.InOrderPrint();
+    cout << endl;
+    rb.Remove(10);
+    rb.InOrder();
+    cout << endl;
+    rb.Remove(21);
+    rb.Remove(13);
+    rb.InOrder();
+    return 0;
+}
