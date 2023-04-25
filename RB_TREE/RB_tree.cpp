@@ -6,7 +6,7 @@
 
 //申请结点，将结点的颜色初始化为红色，初始化结点的关键字，其他初始化为空
 template<class T>
-RBTNode<T> * RBTree<T>::NewNode(const T &x=T())
+RBTNode<T>*  RBTree<T>::NewNode(const T &x)
 {
     RBTNode<T> *s= new RBTNode<T>();
     assert(s!=NULL);
@@ -40,7 +40,7 @@ void RBTree<T>::LeftRotate(RBTNode<T> *z)
     y->parent = z->parent;
     if(z == root)
     {
-        y = root;
+        root = y;
     }
     else if(z == z->parent->left)
     {
@@ -75,9 +75,9 @@ void RBTree<T>::RightRotate(RBTNode<T> *z)
     y->parent = z->parent;
     if(z == root)
     {
-        y = root;
+        root = y;
     }
-    else if(z = z->parent->left)
+    else if(z == z->parent->left)
     {
         z->parent->left = y;
     }
@@ -171,10 +171,10 @@ bool RBTree<T>::Insert(const T &key)
 template<class T>
 void RBTree<T>::InsertFixup(RBTNode<T>* s)
 {
+    RBTNode<T> *uncle;
     //仅当父节点到的颜色是红色时，才进行调整，用while是因为有一种情况可能会回溯
     while(s != root && s->parent->color == RED)
     {
-        RBTNode<T> *uncle;
         //祖父节点一定存在，因为父节点为红，不可能为root
         if(s->parent == s->parent->parent->left)
         {
@@ -247,51 +247,115 @@ bool RBTree<T>::Remove(T key)
 template<class T>
 void RBTree<T>::Remove(RBTNode<T> *z)
 {
+    //表明是真正删除的地方
     RBTNode<T> *y;
-    if(z->left != Nil || z->right != Nil)
+    //当只有一个子节点或者没有子节点
+    if(z->left == Nil || z->right == Nil)
     {
         y = z;
     }
-    else{
+    else{//有两个结点
         y = FindSuccessor(z);
         swap(y->key,z->key);
     }
 
     RBTNode<T> *yp = y->parent;
-    RBTNode<T> *ychild = Nil;
-    //y最多只会有一个子节点
-    if(y->left != Nil)
-    {
-        ychild = y->left;
-    }
-    else if(y->right != Nil)
-    {
-        ychild = y->right;
-    }
-    if(ychild != Nil)
-        ychild->parent = yp;
-    if(root == y)
-    {
+    //取孩子结点，可能为Nil
+    RBTNode<T> *ychild = y->left != Nil?y->left:y->right;
+    //不知道为什么没有判断ychild是不是Nil
+    ychild->parent=yp;
+    if(yp == Nil){
         root = ychild;
     }
-    else if(y == yp->left)
-    {
-        yp->left = ychild;
+    else if(yp->left==y){
+        yp->left=ychild;
     }
-    else
-    {
-        yp->right = ychild;
+    else{
+        yp->right=ychild;
     }
     if(y->color == BLACK)
-        //?
         RemoveFixup(ychild);
-    delete y;
+    delete y; 
 }
 
 template<class T>
 void RBTree<T>::RemoveFixup(RBTNode<T> *x)
 {
-
+    while(x != root && x->color == BLACK)
+    {
+        RBTNode<T>* bro;
+        if(x == x->parent->left)
+        {
+            bro = x->parent->right;
+            //红兄
+            if(bro->color == RED)
+            {
+                bro->color = BLACK;
+                x->parent->color = RED;
+                LeftRotate(x->parent);
+                //更新bro
+                bro = x->parent->right;
+            }
+            //包含两种情况，黑兄黑侄
+            if(bro->left->color == BLACK && bro->right->color == BLACK)
+            {
+                bro->color = RED;
+                //回溯，在黑兄黑侄黑父情况下回溯成功
+                x = x->parent;
+            }
+            else//黑兄红侄
+            {
+                if(bro->left->color == RED)
+                {
+                    bro->left->color = BLACK;
+                    bro->color = RED;
+                    RightRotate(bro);
+                    bro = x->parent->right;
+                }
+                bro->color = x->parent->color;
+                x->parent->color = BLACK;
+                bro->right->color = BLACK;
+                LeftRotate(x->parent);
+                x = root;//结束循环
+            }
+        }
+        else
+        {
+            bro = x->parent->left;
+            //红兄
+            if(bro->color == RED)
+            {
+                bro->color = BLACK;
+                x->parent->color = RED;
+                RightRotate(x->parent);
+                //更新bro
+                bro = x->parent->left;
+            }
+            //包含两种情况，黑兄黑侄
+            if(bro->left->color == BLACK && bro->right->color == BLACK)
+            {
+                bro->color = RED;
+                //回溯，在黑兄黑侄黑父情况下回溯成功
+                x = x->parent;
+            }
+            else//黑兄红侄
+            {
+                if(bro->right->color == RED)
+                {
+                    bro->right->color = BLACK;
+                    bro->color = RED;
+                    LeftRotate(bro);
+                    bro = x->parent->left;
+                }
+                bro->color = x->parent->color;
+                x->parent->color = BLACK;
+                bro->right->color = BLACK;
+                RightRotate(x->parent);
+                x = root;//结束循环
+            }           
+        }
+    }
+    x->color = BLACK;
 }
 
 /*
@@ -331,7 +395,7 @@ void RBTree<T>::InOrder(RBTNode<T> *node) const
     InOrder(node->right);
 }
 template<class T>
-void LevelOrderPrint(RBTNode<T> *node)
+void RBTree<T>::LevelOrderPrint(RBTNode<T> *node)
 {
     if(node == Nil)
         return;
@@ -358,7 +422,7 @@ void LevelOrderPrint(RBTNode<T> *node)
     }
 }
 template<class T>
-void HorizontalPrint(RBTNode<T>*node,int depth,char prefix)
+void RBTree<T>::HorizontalPrint(RBTNode<T>*node,int depth,char prefix)
 {
     if(node == Nil)
     {
@@ -385,10 +449,10 @@ int main()
         rb.Insert(i);
     }
     rb.HorizontalPrint();
-    // cout<<"...................."<<endl;
-    // rb.Remove(27);
-    // rb.Remove(8);
-    // rb.Remove(6);
-    // rb.HorizontalPrint();
+    cout<<"...................."<<endl;
+    rb.Remove(27);
+    rb.Remove(8);
+    rb.Remove(6);
+    rb.HorizontalPrint();
     return 0;
 }

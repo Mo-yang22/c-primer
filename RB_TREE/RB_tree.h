@@ -39,13 +39,13 @@ public:
     bool Remove(T key);
 
     //以层序遍历的形式打印
-    void LevelOrderPrint() const{ LevelOrderPrint(root); }
+    void LevelOrderPrint() { LevelOrderPrint(root); }
     
     //以横向的形式打印
-    void HorizontalPrint() const { HorizontalPrint(root,0,'|'); }
+    void HorizontalPrint()  { HorizontalPrint(root,0,'|'); }
 private:
     //新建一个节点
-    RBTNode<T> *NewNode(const T &x=T());
+    RBTNode<T>* NewNode(const T &x=T());
 
     void InOrder(RBTNode<T>* node) const;
 

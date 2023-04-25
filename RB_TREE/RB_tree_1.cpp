@@ -353,13 +353,13 @@ protected:
                     LeftRotate(x->parent);
                     w= x->parent->right;
                 }
-                
+                //黑兄黑侄红父和黑兄黑侄黑父
                 if(w->left->color == BLACK && w->right->color ==BLACK)
                 {
                     w->color = RED;
                     x= x->parent;
                 }
-                else//黑兄红父
+                else//黑兄红侄
                 {
                     //一种情况,转换为第二种
                     if(w->right->color == BLACK)
@@ -386,7 +386,7 @@ protected:
                     RightRotate(x->parent);
                     w = x->parent->left;
                 }
-                if(w->right->color == BLACK && w->right->color == BLACK)
+                if(w->right->color == BLACK && w->left->color == BLACK)
                 {
                     w->color = RED;
                     x = x->parent;
