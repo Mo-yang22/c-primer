@@ -1,3 +1,13 @@
+/**
+ * @file RB_tree.cpp
+ * @author sunkunpeng (skp@lab)
+ * @brief 
+ * @version 0.1
+ * @date 2023-06-23
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include "RB_tree.h"
 
 /*
@@ -5,6 +15,13 @@
 */
 
 //申请结点，将结点的颜色初始化为红色，初始化结点的关键字，其他初始化为空
+/**
+ * @brief 
+ * 
+ * @tparam T 
+ * @param x 
+ * @return RBTNode<T>* 
+ */
 template<class T>
 RBTNode<T>*  RBTree<T>::NewNode(const T &x)
 {
